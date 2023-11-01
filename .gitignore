@@ -2,3 +2,6 @@ images/
 
 images.zip
 .DS_Store
+
+*.csv
+*.html

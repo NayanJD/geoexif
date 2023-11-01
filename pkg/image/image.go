@@ -8,17 +8,11 @@ import (
 	"github.com/dsoprea/go-exif/v2"
 	exifcommon "github.com/dsoprea/go-exif/v2/common"
 	jpeg "github.com/dsoprea/go-jpeg-image-structure"
-	png "github.com/dsoprea/go-png-image-structure"
+	// png "github.com/dsoprea/go-png-image-structure"
 	// "io/ioutil"
 )
 
 func GetGeoData(path string) (data string, err error) {
-
-	// b, err := ioutil.ReadFile(path)
-
-	// if err != nil {
-	// return "", "", err
-	// }
 
 	data, err = TryJpeg(path)
 
@@ -71,7 +65,7 @@ func extractGPSData(exifs []exif.ExifTag) (string, error) {
 	foundTagsSet := map[string]struct{}{}
 	for _, exif := range exifs {
 		if exif.TagName == "GPSLatitude" || exif.TagName == "GPSLongitude" || exif.TagName == "GPSLongitudeRef" || exif.TagName == "GPSLatitudeRef" {
-			fmt.Printf("tagName: %v, tagValue: %T\n", exif.TagName, exif.Value)
+			// fmt.Printf("tagName: %v, tagValue: %T\n", exif.TagName, exif.Value)
 			foundTagsSet[exif.TagName] = struct{}{}
 			tagMap[exif.TagName] = exif
 
@@ -95,7 +89,7 @@ func extractGPSData(exifs []exif.ExifTag) (string, error) {
 			float64(longTag[2].Numerator/longTag[2].Denominator),
 			longTagRef)
 
-		fmt.Printf("lat: %v, long: %v\n", lat, long)
+		// fmt.Printf("lat: %v, long: %v\n", lat, long)
 
 		return fmt.Sprintf("Latitude: %v Longitude: %v", lat, long), nil
 	} else {
@@ -111,41 +105,41 @@ func convertDMSToDD(degrees, minutes, seconds float64, direction string) float64
 	return dd
 }
 
-func TryPng(path string) (string, error) {
-	pmp := png.NewPngMediaParser()
+// func TryPng(path string) (string, error) {
+// 	pmp := png.NewPngMediaParser()
 
-	intfc, err := pmp.ParseFile(path)
+// 	intfc, err := pmp.ParseFile(path)
 
-	if err != nil {
-		return "", err
-	}
+// 	if err != nil {
+// 		return "", err
+// 	}
 
-	sl := intfc.(*png.ChunkSlice)
+// 	sl := intfc.(*png.ChunkSlice)
 
-	pngExif, _, err := sl.Exif()
+// 	pngExif, _, err := sl.Exif()
 
-	if err != nil {
-		return "", err
-	}
+// 	if err != nil {
+// 		return "", err
+// 	}
 
-	for _, tagEntry := range pngExif.Entries {
-		value, _ := tagEntry.Value()
+// 	for _, tagEntry := range pngExif.Entries {
+// 		value, _ := tagEntry.Value()
 
-		fmt.Printf("%v %T", tagEntry.TagName(), value)
-	}
+// 		fmt.Printf("%v %T", tagEntry.TagName(), value)
+// 	}
 
-	// index := sl.Index()
+// 	// index := sl.Index()
 
-	// fmt.Printf("index: %#v\n", index)
+// 	// fmt.Printf("index: %#v\n", index)
 
-	if err != nil {
-		return "", err
-	}
+// 	if err != nil {
+// 		return "", err
+// 	}
 
-	if err != nil {
-		return "", err
-	}
+// 	if err != nil {
+// 		return "", err
+// 	}
 
-	return "", nil
-	// return extractGPSData(exifs)
-}
+// 	return "", nil
+// 	// return extractGPSData(exifs)
+// }

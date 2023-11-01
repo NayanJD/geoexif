@@ -1,8 +1,9 @@
 package extractor
 
 import (
-	"fmt"
+	// "fmt"
 	"geoexif/pkg/image"
+	"log"
 	"sync"
 	"time"
 )
@@ -33,10 +34,14 @@ type Extractor struct {
 }
 
 type ExtractedResult struct {
+
+	// Path of the image
 	ImagePath string
 
+	// Geo data in String if present
 	Data string
 
+	// Error faced while extracting EXIF data
 	Error error
 }
 
@@ -55,7 +60,7 @@ func NewExtractor(paths []string, concurrency int, done <-chan bool, gracefulWg 
 
 func (e *Extractor) Run() {
 
-	fmt.Printf("len paths: %v\n", len(e.paths))
+	// fmt.Printf("len paths: %v\n", len(e.paths))
 
 	defer e.gracefulCloseWaitGroup.Done()
 	defer close(e.resultChan)
@@ -67,14 +72,12 @@ func (e *Extractor) Run() {
 	}
 
 	if concurrency > len(e.paths) {
-		concurrency = len(e.paths)
+		concurrency = Max(len(e.paths), 1)
 	}
 
 	steps := len(e.paths) / concurrency
 
 	times := concurrency + len(e.paths)%concurrency
-
-	fmt.Printf("concurrency: %v, steps: %v, times: %v\n", concurrency, steps, times)
 
 	wg := sync.WaitGroup{}
 
@@ -86,7 +89,7 @@ func (e *Extractor) Run() {
 
 	wg.Wait()
 
-	fmt.Println("Extractor run dnoe")
+	// fmt.Println("Extractor run dnoe")
 }
 
 func (e *Extractor) ExtractExif(from, to int, wg *sync.WaitGroup) {
@@ -112,12 +115,12 @@ func (e *Extractor) ExtractExifHelper(from, to int, isDoneCh chan<- interface{})
 
 	for ; from < to; from++ {
 
-		fmt.Printf("Extracting exif: %v\n", e.paths[from])
+		log.Printf("Extracting exif: %v\n", e.paths[from])
 
 		data, err := image.GetGeoData(e.paths[from])
 
 		if err != nil {
-			fmt.Printf("error type: %T, err: %v\n", err, err)
+			log.Printf("error type: %T, err: %v\n", err, err)
 		}
 		time.Sleep(1 * time.Second)
 		if e.shouldStopNow {
@@ -132,5 +135,13 @@ func Min(a, b int) int {
 		return a
 	} else {
 		return b
+	}
+}
+
+func Max(a, b int) int {
+	if a < b {
+		return b
+	} else {
+		return a
 	}
 }
