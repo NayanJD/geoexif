@@ -3,6 +3,7 @@ package filesystem
 import (
 	"fmt"
 	"io/fs"
+	// "path"
 	"path/filepath"
 )
 
@@ -40,10 +41,8 @@ func (bipr *BuiltInPathReader) Fetch(dir string) (paths []string, err error) {
 			return err
 		}
 
-		// fmt.Println(info.Name())
-
 		if !info.IsDir() {
-			paths = append(paths, info.Name())
+			paths = append(paths, path)
 
 		}
 

@@ -1,0 +1,10 @@
+Image Path, Lat/Long, Comment
+images/exif-error.jpg,,partial segment data encountered before scan-data,
+images/.DS_Store,,file does not look like a JPEG: (00) (00) (00),
+images/more_images/dog.png,,file does not look like a JPEG: (89) (50) (4e),
+images/more_images/david.gif,,file does not look like a JPEG: (47) (49) (46),
+images/more_images/.DS_Store,,file does not look like a JPEG: (00) (00) (00),
+images/rock.jpg,,no exif data,
+images/anubis.jpg,Latitude: 49.254444444444445 Longitude: -123.1,,
+images/bird.jpeg,Latitude: 48.564166666666665 Longitude: -123.4388888888889,,
+images/more_images/wax-card.jpg,Latitude: 49.254444444444445 Longitude: -123.1,,
