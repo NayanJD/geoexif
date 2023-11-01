@@ -1,6 +1,6 @@
 ## GEO EXIF
 
-A utility to extract geo information in a directory
+A utility to extract geo information in a directory. Currently, Only JPEG is supported.
 
 Run as: 
 
