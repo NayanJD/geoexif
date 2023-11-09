@@ -3,5 +3,7 @@ images.zip
 
 *.csv
 *.html
-
+*.out
+*.txt
+*.test
 test_images/*
