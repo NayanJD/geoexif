@@ -2,7 +2,7 @@ package extractor
 
 import (
 	"fmt"
-	"log"
+	// "log"
 	"sync/atomic"
 
 	// "runtime"
@@ -83,7 +83,7 @@ func BenchmarkExtractor(b *testing.B) {
 
 				extractor.Run()
 
-				log.Printf("Allocations: %d\n", allocationCount.Load())
+				// log.Printf("Allocations: %d\n", allocationCount.Load())
 			}
 
 		})
