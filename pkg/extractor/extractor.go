@@ -117,46 +117,22 @@ L:
 func (e *Extractor) ExtractExifHelper(from, to int, isDoneCh chan<- interface{}) {
 	defer close(isDoneCh)
 
+	// fileCloserCh := make(chan *os.File)
+
+	// defer close(fileCloserCh)
+
+	// go func() {
+
+	// 	for file := range fileCloserCh {
+	// 		file.Close()
+	// 	}
+	// }()
+
 	for ; from < to; from++ {
 
 		// log.Printf("Extracting exif: %v\n", e.paths[from])
 
-		file, err := os.Open(e.paths[from])
-
-		if err != nil {
-			e.resultChan <- &ExtractedResult{ImagePath: e.paths[from], Error: err}
-			continue
-		}
-
-		fileInfo, err := file.Stat()
-
-		if err != nil {
-			e.resultChan <- &ExtractedResult{ImagePath: e.paths[from], Error: err}
-			continue
-		}
-
-		sizeInBytes := fileInfo.Size()
-
-		imageBytesBufferPtr := e.bufferPool.Get().(*[]byte)
-		imageBytesBuffer := *imageBytesBufferPtr
-
-		if int64(cap(imageBytesBuffer)) < sizeInBytes {
-			extraByteSlice := make([]byte, int(sizeInBytes-int64(cap(imageBytesBuffer))))
-			imageBytesBuffer = append(imageBytesBuffer, extraByteSlice...)
-		} else {
-			imageBytesBuffer = imageBytesBuffer[:sizeInBytes]
-		}
-
-		_, err = file.Read(imageBytesBuffer)
-		// if err != nil {
-		// 	log.Printf("path: %q, err: %v\n", e.paths[from], err)
-		// }
-		// log.Printf("size: %d, read %d\n", sizeInBytes, count)
-
-		data, err := image.GetGeoDataFromBytes(imageBytesBuffer)
-
-		*imageBytesBufferPtr = imageBytesBuffer
-		e.bufferPool.Put(imageBytesBufferPtr)
+		// fileCloserCh <- file
 
 		// // if err != nil {
 		// // 	log.Printf("path: %q, err: %v\n", e.paths[from], err)
@@ -166,9 +142,49 @@ func (e *Extractor) ExtractExifHelper(from, to int, isDoneCh chan<- interface{})
 		if e.shouldStopNow {
 			return
 		}
-		e.resultChan <- &ExtractedResult{ImagePath: e.paths[from], Data: data, Error: err}
+		e.resultChan <- e.GetExifData(e.paths[from])
 	}
 
+}
+
+func (e *Extractor) GetExifData(path string) *ExtractedResult {
+	file, err := os.Open(path)
+
+	defer file.Close()
+	if err != nil {
+		return &ExtractedResult{ImagePath: path, Error: err}
+	}
+
+	fileInfo, err := file.Stat()
+
+	if err != nil {
+		return &ExtractedResult{ImagePath: path, Error: err}
+	}
+
+	sizeInBytes := fileInfo.Size()
+
+	imageBytesBufferPtr := e.bufferPool.Get().(*[]byte)
+	imageBytesBuffer := *imageBytesBufferPtr
+
+	if int64(cap(imageBytesBuffer)) < sizeInBytes {
+		extraByteSlice := make([]byte, int(sizeInBytes-int64(cap(imageBytesBuffer))))
+		imageBytesBuffer = append(imageBytesBuffer, extraByteSlice...)
+	} else {
+		imageBytesBuffer = imageBytesBuffer[:sizeInBytes]
+	}
+
+	_, err = file.Read(imageBytesBuffer)
+	// if err != nil {
+	// 	log.Printf("path: %q, err: %v\n", e.paths[from], err)
+	// }
+	// log.Printf("size: %d, read %d\n", sizeInBytes, count)
+
+	data, err := image.GetGeoDataFromBytes(imageBytesBuffer)
+
+	*imageBytesBufferPtr = imageBytesBuffer
+	e.bufferPool.Put(imageBytesBufferPtr)
+
+	return &ExtractedResult{ImagePath: path, Data: data, Error: err}
 }
 func Min(a, b int) int {
 	if a < b {
