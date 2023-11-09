@@ -43,9 +43,18 @@ func main() {
 	gracefulShutdownWg := &sync.WaitGroup{}
 	gracefulShutdownWg.Add(1)
 
+	p := &sync.Pool{
+		New: func() interface{} {
+			mem := make([]byte, 1024)
+
+			// log.Println("New buffer created")
+			return &mem
+		},
+	}
+
 	// The struct whose Run() would actually start reading from paths
 	// slice and send the image exif data to ResultChan read only channel
-	extractor := extractor.NewExtractor(paths, runtime.NumCPU(), done, gracefulShutdownWg)
+	extractor := extractor.NewExtractor(paths, runtime.NumCPU(), done, gracefulShutdownWg, p)
 	go extractor.Run()
 
 	// The channel which would signal that the CSV or HTML file writer has completed

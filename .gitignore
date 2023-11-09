@@ -3,3 +3,5 @@ images.zip
 
 *.csv
 *.html
+
+test_images/*

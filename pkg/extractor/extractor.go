@@ -3,9 +3,10 @@ package extractor
 import (
 	// "fmt"
 	"geoexif/pkg/image"
-	"log"
+	// "log"
+	// "os"
 	"sync"
-	"time"
+	// "time"
 )
 
 // Extractor represents a type with a fixed file paths
@@ -31,6 +32,8 @@ type Extractor struct {
 	gracefulCloseWaitGroup *sync.WaitGroup
 
 	shouldStopNow bool
+
+	bufferPool *sync.Pool
 }
 
 type ExtractedResult struct {
@@ -45,7 +48,7 @@ type ExtractedResult struct {
 	Error error
 }
 
-func NewExtractor(paths []string, concurrency int, done <-chan bool, gracefulWg *sync.WaitGroup) *Extractor {
+func NewExtractor(paths []string, concurrency int, done <-chan bool, gracefulWg *sync.WaitGroup, p *sync.Pool) *Extractor {
 	resultChan := make(chan *ExtractedResult)
 
 	return &Extractor{
@@ -55,6 +58,7 @@ func NewExtractor(paths []string, concurrency int, done <-chan bool, gracefulWg 
 		resultChan:             resultChan,
 		done:                   done,
 		gracefulCloseWaitGroup: gracefulWg,
+		bufferPool:             p,
 	}
 }
 
@@ -115,14 +119,50 @@ func (e *Extractor) ExtractExifHelper(from, to int, isDoneCh chan<- interface{})
 
 	for ; from < to; from++ {
 
-		log.Printf("Extracting exif: %v\n", e.paths[from])
+		// log.Printf("Extracting exif: %v\n", e.paths[from])
+
+		// file, err := os.Open(e.paths[from])
+
+		// if err != nil {
+		// 	e.resultChan <- &ExtractedResult{ImagePath: e.paths[from], Error: err}
+		// 	continue
+		// }
+
+		// fileInfo, err := file.Stat()
+
+		// if err != nil {
+		// 	e.resultChan <- &ExtractedResult{ImagePath: e.paths[from], Error: err}
+		// 	continue
+		// }
+
+		// sizeInBytes := fileInfo.Size()
+
+		// imageBytesBufferPtr := e.bufferPool.Get().(*[]byte)
+		// imageBytesBuffer := *imageBytesBufferPtr
+
+		// if int64(cap(imageBytesBuffer)) < sizeInBytes {
+		// 	extraByteSlice := make([]byte, int(sizeInBytes-int64(cap(imageBytesBuffer))))
+		// 	imageBytesBuffer = append(imageBytesBuffer, extraByteSlice...)
+		// } else {
+		// 	imageBytesBuffer = imageBytesBuffer[:sizeInBytes]
+		// }
+
+		// _, err = file.Read(imageBytesBuffer)
+		// // if err != nil {
+		// // 	log.Printf("path: %q, err: %v\n", e.paths[from], err)
+		// // }
+		// // log.Printf("size: %d, read %d\n", sizeInBytes, count)
+
+		// data, err := image.GetGeoDataFromBytes(imageBytesBuffer)
+
+		// *imageBytesBufferPtr = imageBytesBuffer
+		// e.bufferPool.Put(imageBytesBufferPtr)
+
+		// // if err != nil {
+		// // 	log.Printf("path: %q, err: %v\n", e.paths[from], err)
+		// // }
 
 		data, err := image.GetGeoData(e.paths[from])
-
-		if err != nil {
-			log.Printf("error type: %T, err: %v\n", err, err)
-		}
-		time.Sleep(1 * time.Second)
 		if e.shouldStopNow {
 			return
 		}
