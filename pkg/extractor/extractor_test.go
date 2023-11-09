@@ -2,10 +2,15 @@ package extractor
 
 import (
 	"fmt"
+	"io/ioutil"
+	"path/filepath"
+
 	// "log"
 	"sync/atomic"
 
 	// "runtime"
+	"os"
+	"strings"
 	"sync"
 	"testing"
 )
@@ -14,7 +19,6 @@ var uniqueImagePaths []string = []string{
 	"../../images/anubis.jpg",
 	"../../images/rock.jpg",
 	"../../images/bird.jpeg",
-	"../../images/anubis.jpg",
 	"../../images/more_images/dog.png",
 	"../../images/more_images/wax-card.jpg",
 }
@@ -35,14 +39,39 @@ func randomisedImagePaths(size int) []string {
 	imagePaths := make([]string, 0)
 
 	for i := 0; i < times; i++ {
+		var selectedPaths []string
 		if i == times-1 {
-			imagePaths = append(imagePaths, uniqueImagePaths[0:size%uniqueImageCount]...)
+			selectedPaths = uniqueImagePaths[0 : size%uniqueImageCount]
+
+			// imagePaths = append(imagePaths, uniqueImagePaths[0:size%uniqueImageCount]...)
 		} else {
-			imagePaths = append(imagePaths, uniqueImagePaths...)
+			// imagePaths = append(imagePaths, uniqueImagePaths...)
+			selectedPaths = uniqueImagePaths
+		}
+
+		for _, path := range selectedPaths {
+			fileName := filepath.Base(path)
+
+			splittedFileName := strings.Split(fileName, ".")
+			fileNameWithoutExt := strings.Join(splittedFileName[0:len(splittedFileName)-1], "")
+
+			newFileName := fmt.Sprintf("%v-%d.%v", fileNameWithoutExt, i, splittedFileName[len(splittedFileName)-1])
+
+			imagePaths = append(imagePaths, filepath.Join("../../test_images", newFileName))
+
+			input, _ := ioutil.ReadFile(path)
+
+			ioutil.WriteFile(filepath.Join("../../test_images", newFileName), input, 0644)
 		}
 	}
 
 	return imagePaths
+}
+
+func clearFiles(paths []string) {
+	for _, path := range paths {
+		os.Remove(path)
+	}
 }
 
 func BenchmarkExtractor(b *testing.B) {
@@ -84,6 +113,8 @@ func BenchmarkExtractor(b *testing.B) {
 				extractor.Run()
 
 				// log.Printf("Allocations: %d\n", allocationCount.Load())
+
+				clearFiles(paths)
 			}
 
 		})
