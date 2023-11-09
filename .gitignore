@@ -5,5 +5,6 @@ images.zip
 *.html
 *.out
 *.test
+*.txt
 
 test_images/*

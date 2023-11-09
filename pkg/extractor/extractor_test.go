@@ -2,7 +2,7 @@ package extractor
 
 import (
 	"fmt"
-	"log"
+	// "log"
 	"sync/atomic"
 
 	// "runtime"
@@ -47,8 +47,8 @@ func randomisedImagePaths(size int) []string {
 
 func BenchmarkExtractor(b *testing.B) {
 
-	// testInputs := []int{100, 500, 1000}
-	testInputs := []int{100}
+	testInputs := []int{100, 500, 1000}
+	// testInputs := []int{100}
 
 	for _, testInput := range testInputs {
 		b.Run(fmt.Sprintf("file_count_%d", testInput), func(b *testing.B) {
@@ -83,7 +83,7 @@ func BenchmarkExtractor(b *testing.B) {
 
 				extractor.Run()
 
-				log.Printf("Allocations: %d\n", allocationCount.Load())
+				// log.Printf("Allocations: %d\n", allocationCount.Load())
 			}
 
 		})
