@@ -2,6 +2,7 @@ package extractor
 
 import (
 	// "fmt"
+	// "bufio"
 	"geoexif/pkg/image"
 	// "log"
 	"os"
@@ -149,11 +150,11 @@ func (e *Extractor) ExtractExifHelper(from, to int, isDoneCh chan<- interface{})
 
 func (e *Extractor) GetExifData(path string) *ExtractedResult {
 	file, err := os.Open(path)
-
-	defer file.Close()
 	if err != nil {
 		return &ExtractedResult{ImagePath: path, Error: err}
 	}
+
+	defer file.Close()
 
 	fileInfo, err := file.Stat()
 
