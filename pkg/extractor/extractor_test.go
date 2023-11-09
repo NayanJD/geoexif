@@ -47,7 +47,7 @@ func randomisedImagePaths(size int) []string {
 
 func BenchmarkExtractor(b *testing.B) {
 
-	testInputs := []int{100, 500, 1000, 10000, 100000}
+	testInputs := []int{100, 500, 1e3, 1e4}
 	// testInputs := []int{100}
 
 	for _, testInput := range testInputs {
