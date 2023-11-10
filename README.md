@@ -24,7 +24,7 @@ go run pkg/cmd/main.go -dir ./images -output-file test.html --html
 
 ### BenchMarks
 
-The benchmark presented here is between SimplteExtractor and ExtractorWithBuffferPool of pkg/extractor package tested on a 16GB 8-core Apple M1 chip.
+The benchmark presented here is between SimpleExtractor and ExtractorWithBufferPool of pkg/extractor package tested on a 16GB 8-core Apple M1 chip.
 
 ```
 goos: darwin
@@ -54,3 +54,14 @@ Extractor/file_count_1000-8         7.320M ± 0%   7.011M ± 1%   -4.22% (p=0.00
 Extractor/file_count_10000-8        73.53M ± 0%   71.41M ± 0%   -2.88% (p=0.002 n=6)
 geomean                             6.084M        5.714M        -6.08%
 ```
+
+### Flame Graphs
+
+SimpleExtractor
+
+![Without Pooling](./assets/cpu-profile-without-pool.png)
+
+ExtractorWithBufferPool
+
+![With Pooling](./assets/cpu-profile-with-pool.png)
+
