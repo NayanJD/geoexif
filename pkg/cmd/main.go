@@ -54,8 +54,8 @@ func main() {
 
 	// The struct whose Run() would actually start reading from paths
 	// slice and send the image exif data to ResultChan read only channel
-	extractor := extractor.NewExtractor(paths, runtime.NumCPU(), done, gracefulShutdownWg, p)
-	go extractor.Run()
+	e := extractor.NewExtractor(paths, runtime.NumCPU(), done, gracefulShutdownWg, p)
+	go e.Run()
 
 	// The channel which would signal that the CSV or HTML file writer has completed
 	// successfully or handled inturruption gracefully
@@ -81,7 +81,7 @@ func main() {
 	// write to the file
 	go func() {
 
-		for r := range extractor.ResultChan {
+		for r := range e.GetResultChan() {
 			// log.Printf("main: Got result: %#v\n", r)
 			resultWriter.WriteResult(r)
 		}

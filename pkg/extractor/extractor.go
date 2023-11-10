@@ -5,16 +5,21 @@ import (
 	// "bufio"
 	"geoexif/pkg/image"
 	// "log"
-	"os"
+	// "os"
 	"sync"
 	// "time"
 )
+
+type Extractor interface {
+	Run()
+	GetResultChan() <-chan *ExtractedResult
+}
 
 // Extractor represents a type with a fixed file paths
 // slice. By fixed, we mean that to extract image EXIF tags
 // of another slice you need to create another instance of this
 // struct.
-type Extractor struct {
+type SimpleExtractor struct {
 
 	// The number of go routines this extractor is supposed to
 	// spawn. Anything less than 1 would set this to 1.
@@ -26,15 +31,10 @@ type Extractor struct {
 	// The channel which would stop the execution of this extractor
 	done <-chan bool
 
-	// The channel to which the extractor would send the result to
-	ResultChan <-chan *ExtractedResult
-
 	resultChan             chan *ExtractedResult
 	gracefulCloseWaitGroup *sync.WaitGroup
 
 	shouldStopNow bool
-
-	bufferPool *sync.Pool
 }
 
 type ExtractedResult struct {
@@ -49,21 +49,33 @@ type ExtractedResult struct {
 	Error error
 }
 
-func NewExtractor(paths []string, concurrency int, done <-chan bool, gracefulWg *sync.WaitGroup, p *sync.Pool) *Extractor {
+func NewExtractor(paths []string, concurrency int, done <-chan bool, gracefulWg *sync.WaitGroup, p *sync.Pool) Extractor {
 	resultChan := make(chan *ExtractedResult)
 
-	return &Extractor{
-		concurrencyN:           concurrency,
-		paths:                  paths,
-		ResultChan:             resultChan,
-		resultChan:             resultChan,
-		done:                   done,
-		gracefulCloseWaitGroup: gracefulWg,
-		bufferPool:             p,
+	if p == nil {
+		return &SimpleExtractor{
+			concurrencyN:           concurrency,
+			paths:                  paths,
+			resultChan:             resultChan,
+			done:                   done,
+			gracefulCloseWaitGroup: gracefulWg,
+		}
+	} else {
+		return &ExtractorWithBuffferPool{
+			SimpleExtractor: SimpleExtractor{
+				concurrencyN:           concurrency,
+				paths:                  paths,
+				resultChan:             resultChan,
+				done:                   done,
+				gracefulCloseWaitGroup: gracefulWg,
+			},
+			bufferPool: p,
+		}
 	}
+
 }
 
-func (e *Extractor) Run() {
+func (e *SimpleExtractor) Run() {
 
 	// fmt.Printf("len paths: %v\n", len(e.paths))
 
@@ -97,7 +109,7 @@ func (e *Extractor) Run() {
 	// fmt.Println("Extractor run dnoe")
 }
 
-func (e *Extractor) ExtractExif(from, to int, wg *sync.WaitGroup) {
+func (e *SimpleExtractor) ExtractExif(from, to int, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	isDoneCh := make(chan interface{})
@@ -115,78 +127,28 @@ L:
 	}
 }
 
-func (e *Extractor) ExtractExifHelper(from, to int, isDoneCh chan<- interface{}) {
+func (e *SimpleExtractor) ExtractExifHelper(from, to int, isDoneCh chan<- interface{}) {
 	defer close(isDoneCh)
-
-	// fileCloserCh := make(chan *os.File)
-
-	// defer close(fileCloserCh)
-
-	// go func() {
-
-	// 	for file := range fileCloserCh {
-	// 		file.Close()
-	// 	}
-	// }()
 
 	for ; from < to; from++ {
 
 		// log.Printf("Extracting exif: %v\n", e.paths[from])
 
-		// fileCloserCh <- file
+		data, err := image.GetGeoData(e.paths[from])
 
-		// // if err != nil {
-		// // 	log.Printf("path: %q, err: %v\n", e.paths[from], err)
-		// // }
-
-		// data, err := image.GetGeoData(e.paths[from])
 		if e.shouldStopNow {
 			return
 		}
-		e.resultChan <- e.GetExifData(e.paths[from])
+
+		e.resultChan <- &ExtractedResult{ImagePath: e.paths[from], Data: data, Error: err}
 	}
 
 }
 
-func (e *Extractor) GetExifData(path string) *ExtractedResult {
-	file, err := os.Open(path)
-	if err != nil {
-		return &ExtractedResult{ImagePath: path, Error: err}
-	}
-
-	defer file.Close()
-
-	fileInfo, err := file.Stat()
-
-	if err != nil {
-		return &ExtractedResult{ImagePath: path, Error: err}
-	}
-
-	sizeInBytes := fileInfo.Size()
-
-	imageBytesBufferPtr := e.bufferPool.Get().(*[]byte)
-	imageBytesBuffer := *imageBytesBufferPtr
-
-	if int64(cap(imageBytesBuffer)) < sizeInBytes {
-		extraByteSlice := make([]byte, int(sizeInBytes-int64(cap(imageBytesBuffer))))
-		imageBytesBuffer = append(imageBytesBuffer, extraByteSlice...)
-	} else {
-		imageBytesBuffer = imageBytesBuffer[:sizeInBytes]
-	}
-
-	_, err = file.Read(imageBytesBuffer)
-	// if err != nil {
-	// 	log.Printf("path: %q, err: %v\n", e.paths[from], err)
-	// }
-	// log.Printf("size: %d, read %d\n", sizeInBytes, count)
-
-	data, err := image.GetGeoDataFromBytes(imageBytesBuffer)
-
-	*imageBytesBufferPtr = imageBytesBuffer
-	e.bufferPool.Put(imageBytesBufferPtr)
-
-	return &ExtractedResult{ImagePath: path, Data: data, Error: err}
+func (e *SimpleExtractor) GetResultChan() <-chan *ExtractedResult {
+	return e.resultChan
 }
+
 func Min(a, b int) int {
 	if a < b {
 		return a
