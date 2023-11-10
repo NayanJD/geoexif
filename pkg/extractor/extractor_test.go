@@ -101,16 +101,16 @@ func BenchmarkExtractor(b *testing.B) {
 						return &mem
 					},
 				}
-				extractor := NewExtractor(paths, 8, doneCh, gracefulShutdownWg, p)
+				e := NewExtractor(paths, 8, doneCh, gracefulShutdownWg, p)
 
 				go func() {
-					for range extractor.ResultChan {
+					for range e.GetResultChan() {
 					}
 				}()
 
 				b.ResetTimer()
 
-				extractor.Run()
+				e.Run()
 
 				// log.Printf("Allocations: %d\n", allocationCount.Load())
 

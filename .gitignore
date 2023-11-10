@@ -4,6 +4,12 @@ images.zip
 *.csv
 *.html
 *.out
+<<<<<<< HEAD
 *.txt
 *.test
+=======
+*.test
+*.txt
+
+>>>>>>> feat/with-pool
 test_images/*
